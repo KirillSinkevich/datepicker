@@ -1,0 +1,93 @@
+<div class="input-container"
+     [ngClass]="{'active': calIsActive}"
+     (click)="onOpenCalendar()"
+     cdkOverlayOrigin
+     #trigger="cdkOverlayOrigin">
+  <mat-icon class="icon calendar" svgIcon="calendar"></mat-icon>
+  <span class="label">Дата</span>
+  <input class="input" type="text" placeholder="Выберите дату" [ngModel]="selectedDate"
+         (ngModelChange)="onChangeDate($event)"/>
+  <mat-icon *ngIf="selectedDate.length" class="icon delete" svgIcon="delete" (click)="onClearDate()"></mat-icon>
+</div>
+
+<ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="trigger"
+             [cdkConnectedOverlayOpen]="calIsActive"
+             (overlayOutsideClick)="onCloseCalendar()">
+  <div class="calendar-container">
+    <div class="header">
+      <div class="arrow" (click)="onClickArrow(directions.Left)">
+        <mat-icon class="icon" svgIcon="arrow"></mat-icon>
+      </div>
+
+      <div class="selects-container">
+        <div class="select" [ngClass]="{'selected': monthIsActive}" cdkOverlayOrigin #triggerMonth="cdkOverlayOrigin"
+             (click)="onOpenMonthSelect()">
+          <span>{{dateFormat('MMMM')}}</span>
+          <mat-icon class="icon" svgIcon="arrow-1"></mat-icon>
+        </div>
+
+        <div class="select" [ngClass]="{'selected': yearIsActive}" cdkOverlayOrigin #triggerYear="cdkOverlayOrigin"
+             (click)="onOpenYearSelect()">
+          <span>{{dateFormat('YYYY')}}</span>
+          <mat-icon class="icon" svgIcon="arrow-1"></mat-icon>
+        </div>
+      </div>
+
+      <div class="arrow right" (click)="onClickArrow(directions.Right)">
+        <mat-icon class="icon" svgIcon="arrow"></mat-icon>
+      </div>
+    </div>
+    <div class="main">
+      <div class="day-of-week">
+        <div *ngFor="let dayOfWeek of daysOfWeek; trackBy: trackBy">{{dayOfWeek}}</div>
+      </div>
+
+      <div class="dates-grid">
+        <ng-container *ngIf="dates.length">
+          <div *ngFor="let day of dates; index as idx; trackBy: trackBy"
+               [ngClass]="{'current': day?.today, 'selected': day.selected, 'disabled': day?.disabled}"
+               [ngStyle]="{ 'grid-column': idx === 0 ? firstDayIndex : 'auto' }"
+               (click)="onSelectDate(day)">
+            {{day?.date?.toString() | date: 'dd'}}
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="triggerMonth"
+               [cdkConnectedOverlayOpen]="monthIsActive"
+               [cdkConnectedOverlayPositions]="monthSelPosition"
+               (overlayOutsideClick)="onCloseMonthSelect()">
+    <cdk-virtual-scroll-viewport class="select-dropdown"
+                                 [itemSize]="32"
+                                 [minBufferPx]="32"
+                                 [maxBufferPx]="32"
+                                 (scrolledIndexChange)="scroll($event, 'month')">
+        <span class="option"
+              [ngClass]="{'selected': month.selected}"
+              *cdkVirtualFor="let month of months; trackBy: trackBy"
+              (click)="onSelectMonthOrYear(month, 'month')">
+          {{month.stringDate}}
+        </span>
+    </cdk-virtual-scroll-viewport>
+  </ng-template>
+
+  <ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="triggerYear"
+               [cdkConnectedOverlayOpen]="yearIsActive"
+               [cdkConnectedOverlayPositions]="yearSelPosition"
+               (overlayOutsideClick)="onCloseYearSelect()">
+    <cdk-virtual-scroll-viewport class="select-dropdown"
+                                 [itemSize]="32"
+                                 [minBufferPx]="32"
+                                 [maxBufferPx]="32"
+                                 (scrolledIndexChange)="scroll($event, 'year')">
+        <span class="option"
+              [ngClass]="{'selected': year.selected}"
+              *cdkVirtualFor="let year of years"
+              (click)="onSelectMonthOrYear(year, 'year')">
+          {{year.stringDate}}
+        </span>
+    </cdk-virtual-scroll-viewport>
+  </ng-template>
+</ng-template>
